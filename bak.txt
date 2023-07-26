@@ -1,0 +1,106 @@
+// func StartUDP(address string, portSend string) {
+// 	// Resolve the UDP address
+// 	udpAddr, err := net.ResolveUDPAddr("udp", address)
+// 	if err != nil {
+// 		fmt.Println("Error resolving address:", err)
+// 		return
+// 	}
+
+// 	// Create a UDP connection
+// 	conn, err := net.ListenUDP("udp", udpAddr)
+// 	if err != nil {
+// 		fmt.Println("Error creating UDP connection:", err)
+// 		return
+// 	}
+// 	defer conn.Close()
+
+// 	fmt.Println("Listening for UDP packets on", address)
+
+// 	// Create a buffer to store incoming packet data
+// 	buffer := make([]byte, 20000)
+// 	conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
+// 	// Receive UDP packets in a loop
+
+// 	for {
+// 		start := time.Now().UTC()
+// 		// Read from the UDP connection into the buffer
+// 		n, _, err := conn.ReadFromUDP(buffer)
+// 		if err != nil {
+// 			fmt.Println("Error reading UDP packet:", err)
+// 			continue
+// 		}
+// 		// Process the received packet
+// 		packet := buffer[:n]
+// 		// log.Print(packet)
+// 		hexString := hex.EncodeToString(packet)
+// 		ab := hex.EncodeToString(packet[8:12])
+// 		value5, _ := strconv.ParseInt(ab, 16, 64)
+// 		log.Print(value5)
+
+// 		var result []string
+// 		for i := 0; i < len(hexString); i += 2 {
+// 			if i+2 <= len(hexString) {
+// 				result = append(result, hexString[i:i+2])
+// 			} else {
+// 				result = append(result, hexString[i:])
+// 			}
+// 		}
+// 		if result[0] == "f0" {
+// 			dataStruct := AsterixParse(result)
+// 			jsonData, _ := json.Marshal(dataStruct)
+// 			SendDataUdp(portSend, jsonData)
+// 			// Print the JSON data
+// 			fmt.Println(string(jsonData))
+// 			processing := time.Since(start)
+// 			fmt.Fprintf(os.Stdout, "\033[0;31m Time taken: %s\033[0m\n ", processing)
+// 		}
+
+// 	}
+// }
+
+// func StartUDP(address string, portSend string) {
+// 	conn, err := net.ListenPacket("udp", address)
+// 	if err != nil {
+// 		fmt.Println("Error listening:", err)
+// 		return
+// 	}
+// 	defer conn.Close()
+// 	for {
+// 		start := time.Now().UTC()
+// 		buffer := make([]byte, 6408)
+// 		conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
+// 		n, _, err := conn.ReadFrom(buffer)
+// 		if err != nil {
+// 			fmt.Println("Error reading from connection:", err)
+// 			return
+// 		}
+
+// 		packet := buffer[:n]
+// 		hexString := hex.EncodeToString(packet)
+// 		ab := hex.EncodeToString(packet[8:12])
+// 		value5, _ := strconv.ParseInt(ab, 16, 64)
+// 		log.Print(value5)
+// 		// processing := time.Since(start)
+// 		// fmt.Fprintf(os.Stdout, "\033[0;31m Time taken: %s\033[0m\n ", processing)
+// 		var result []string
+
+// 		for i := 0; i < len(hexString); i += 2 {
+// 			if i+2 <= len(hexString) {
+// 				result = append(result, hexString[i:i+2])
+// 			} else {
+// 				result = append(result, hexString[i:])
+// 			}
+// 		}
+// 		if result[0] == "f0" {
+// 			dataStruct := AsterixParse(result)
+// 			jsonData, _ := json.Marshal(dataStruct)
+// 			SendDataUdp(portSend, jsonData)
+// 			// Print the JSON data
+// 			fmt.Println(string(jsonData))
+// 			processing := time.Since(start)
+// 			fmt.Fprintf(os.Stdout, "\033[0;31m Time taken: %s\033[0m\n ", processing)
+// 		}
+
+// 	}
+
+// }
