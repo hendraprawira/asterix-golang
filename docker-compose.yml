@@ -3,4 +3,5 @@ services:
   asterix:
     build: .
     ports:
-     - "8080:8080/udp"
+      - "8080:8080"
+      - "4378:4378/udp"

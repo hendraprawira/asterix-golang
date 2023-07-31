@@ -23,7 +23,7 @@ func Routes() *gin.Engine {
 	r.MaxMultipartMemory = 8 << 20 // 8 MiB
 
 	// Define a route handler for handling HTTP requests
-	apiUri := r.Group("/v1")
+	apiUri := r.Group("")
 	asterixRoute := apiUri.Group("")
 	{
 		asterixRoute.GET("/geosocket", asterix.WebSocket)

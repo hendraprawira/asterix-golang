@@ -88,10 +88,10 @@ func AsterixGeoJSONParse(data []byte) {
 		LonAkhirAz: lonAkhirAZ,
 		Ranges:     ranges,
 	}
-	generateGeoJSON(genGeoJson)
+	GenerateGeoJSON(genGeoJson)
 }
 
-func generateGeoJSON(genGeoJson models.GenGeoJson) {
+func GenerateGeoJSON(genGeoJson models.GenGeoJson) {
 	geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
 	latAwalAZ1 := genGeoJson.LatAwalAz   // -6.9496124915037
 	lonAwalAZ1 := genGeoJson.LonAwalAz   // 107.61957049369812
@@ -144,11 +144,14 @@ func generateGeoJSON(genGeoJson models.GenGeoJson) {
 			Properties: geoJsonProperties,
 		}
 		substringStart = substringEnd
-		geoJson.Features = append(geoJson.Features, &geoJsonFeature)
+		if opacs >= 0.5 {
+			geoJson.Features = append(geoJson.Features, &geoJsonFeature)
+		}
 
 	}
 	geoJson.Type = "FeatureCollection"
 	jsonData, _ := json.Marshal(geoJson)
+	// SendDataUdp("172.16.21.205:8888", jsonData)
 	SendWebSocketMessage(jsonData)
 }
 

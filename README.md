@@ -20,3 +20,12 @@ you can build and run your Go application as usual:
 ```bash
 go build
 ```
+
+you can build and up with docker, just run:
+```bash
+docker-compose build
+```
+and
+```bash
+docker-compose up
+```
