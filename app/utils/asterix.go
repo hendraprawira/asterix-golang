@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"asterix-golang/models"
+	"asterix-golang/app/models"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
@@ -9,14 +9,14 @@ import (
 	"strconv"
 	"strings"
 
-	websocketGo "asterix-golang/utils/websocket"
-
 	"github.com/StefanSchroeder/Golang-Ellipsoid/ellipsoid"
 )
 
 func AsterixGeoJSONParse(data []byte) {
 
 	geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
+
+	//dummy lat lon from ownunit/ship
 	geoCrdRefStartAZ := models.OwnUnit{
 		Lat: -6.949612491503703,
 		Lon: 107.61957049369812,
@@ -35,7 +35,6 @@ func AsterixGeoJSONParse(data []byte) {
 	value8 := binary.BigEndian.Uint16(data[14:16])
 	endAz := (float64(value8) / math.Pow(2, 16)) * float64(360)
 
-	// log.Print(startAz, endAz)
 	var cellStartAZ float64 = (float64(cellDur) * math.Pow(10, -15)) * float64(startRG+1-1) * (299792458 / 2)  //  range awal cell dari own unit terhadap start azimuth
 	var cellEndAZ float64 = (float64(cellDur) * math.Pow(10, -15)) * float64(startRG+1-1) * (299792458 / 2)    //  range awal cell dari own unit terhadap end azimuth
 	var ranges float64 = (float64(cellDur)*math.Pow(10, -15))*float64(startRG+2-1)*(299792458/2) - cellStartAZ // 9.765624948527275
@@ -100,8 +99,8 @@ func generateGeoJSON(genGeoJson models.GenGeoJson) {
 	lonAkhirAZ1 := genGeoJson.LonAkhirAz // 107.61957049369812
 	substringStart := 0
 	substringEnd := 0
-	resolusi := getRes(int(genGeoJson.C240.I048.Res))
-	vidioBlock := getVideoBlock(genGeoJson.C240) // 2
+	resolusi := GetRes(int(genGeoJson.C240.I048.Res))
+	vidioBlock := GetVideoBlock(genGeoJson.C240) // 2
 	vidioBlockArr := strings.Split(vidioBlock, "")
 	geoJson := models.FeatureCollection{}
 
@@ -149,13 +148,12 @@ func generateGeoJSON(genGeoJson models.GenGeoJson) {
 
 	}
 	geoJson.Type = "FeatureCollection"
-	sonData, _ := json.Marshal(geoJson)
-	websocketGo.SendWebSocketMessage(sonData)
-	// log.Print(string(sonData))
+	jsonData, _ := json.Marshal(geoJson)
+	SendWebSocketMessage(jsonData)
 }
 
 // Get Vidio Block
-func getVideoBlock(c240 models.Cat240s) string {
+func GetVideoBlock(c240 models.Cat240s) string {
 	var videoBlock string
 	if c240.I050.Video != "" {
 		videoBlock = c240.I050.Video
@@ -168,7 +166,7 @@ func getVideoBlock(c240 models.Cat240s) string {
 }
 
 // Get Vidio Resolution
-func getRes(res int) int {
+func GetRes(res int) int {
 	resolusi := 0
 	if res == 3 {
 		resolusi = 1

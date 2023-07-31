@@ -1,13 +1,11 @@
 package main
 
 import (
-	"asterix-golang/utils"
+	"asterix-golang/app/utils"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-
-	websocketGo "asterix-golang/utils/websocket"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -36,14 +34,14 @@ func main() {
 }
 
 func WebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := websocketGo.Upgrader.Upgrade(w, r, nil)
+	conn, err := utils.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("[BE-Tracking-Surface-Debug] [err] [controllers-tracking] [WebSocketGetDataSurface] [Upgrade Connection]: ", err)
 		return
 	}
 
 	defer conn.Close()
-	websocketGo.GlobalWebSocketCon = conn // Store the connection globally
+	utils.GlobalWebSocketCon = conn // Store the connection globally
 
 	for {
 		// Read message from WebSocket

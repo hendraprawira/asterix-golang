@@ -35,9 +35,6 @@ func ReadUDP(packetConn *ipv4.PacketConn, buffer []byte, host string) {
 		data := buffer[:n]
 		if int(data[0:1][0]) == 240 && n > 500 {
 			AsterixGeoJSONParse(data)
-			// jsonData, _ := json.Marshal(dataStruct.I041.StartAz)
-			// fmt.Println(dataStruct.I041.StartAz)
-			// SendDataUdp(host, jsonData)
 		}
 	}
 

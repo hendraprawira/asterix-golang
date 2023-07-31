@@ -18,10 +18,6 @@ type Geometry struct {
 	Coordinates [][][]float64 `json:"coordinates"`
 }
 
-// type Coordinate struct {
-// 	Coords [][]float64
-// }
-
 type Properties struct {
 	Opacity float64 `json:"opacity"`
 	Color   string  `json:"color"`
