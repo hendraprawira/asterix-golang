@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"net"
+	"os"
+	"time"
 
 	"golang.org/x/net/ipv4"
 )
@@ -27,14 +29,13 @@ func ConnectionUDP(port string) (conn *net.UDPConn) {
 
 func ReadUDP(packetConn *ipv4.PacketConn, buffer []byte, host string) {
 	for {
-		n, _, _, err := packetConn.ReadFrom(buffer)
-		if err != nil {
-			fmt.Println("Error reading:", err)
-			continue
-		}
+		start := time.Now().UTC()
+		n, _, _, _ := packetConn.ReadFrom(buffer)
 		data := buffer[:n]
 		if int(data[0:1][0]) == 240 && n > 500 {
 			AsterixGeoJSONParse(data)
+			processing := time.Since(start)
+			fmt.Fprintf(os.Stdout, "\033[0;31m Time taken: %s\033[0m\n ", processing)
 		}
 	}
 

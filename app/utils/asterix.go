@@ -18,13 +18,13 @@ func AsterixGeoJSONParse(data []byte) {
 
 	//dummy lat lon from ownunit/ship
 	geoCrdRefStartAZ := models.OwnUnit{
-		Lat: -6.949612491503703,
-		Lon: 107.61957049369812,
+		Lat: -9.2893,
+		Lon: 106.4583,
 	}
 
 	geoCrdRefEndtAZ := models.OwnUnit{
-		Lat: -6.949612491503703,
-		Lon: 107.61957049369812,
+		Lat: -9.2893,
+		Lon: 106.4583,
 	}
 	cellDur := binary.BigEndian.Uint32(data[20:24])
 	startRG := binary.BigEndian.Uint32(data[16:20])
@@ -42,7 +42,7 @@ func AsterixGeoJSONParse(data []byte) {
 	latAwalAZ, lonAwalAZ := geo1.At(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, cellStartAZ, startAz)
 	latAkhirAZ, lonAkhirAZ := geo1.At(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, cellEndAZ, endAz)
 
-	len240 := binary.BigEndian.Uint16(data[1:3])
+	// len240 := binary.BigEndian.Uint16(data[1:3])
 	res := data[25:26]
 	calc := int(res[0]) - 1
 	calca := math.Pow(2, float64(calc))
@@ -72,13 +72,13 @@ func AsterixGeoJSONParse(data []byte) {
 		},
 	}
 
-	if len240 <= 1020 {
-		dataStruct.I050.Video = value14
-	} else if len240 > 1020 && len240 <= 16320 {
-		dataStruct.I051.Video = value14
-	} else if len240 > 16320 && len240 <= 65024 {
-		dataStruct.I052.Video = value14
-	}
+	// if len240 <= 1020 {
+	// 	dataStruct.I050.Video = value14
+	// } else if len240 > 1020 && len240 <= 16320 {
+	// 	dataStruct.I051.Video = value14
+	// } else if len240 > 16320 && len240 <= 65024 {
+	// 	dataStruct.I052.Video = value14
+	// }
 
 	genGeoJson := models.GenGeoJson{
 		C240:       dataStruct,
@@ -87,6 +87,7 @@ func AsterixGeoJSONParse(data []byte) {
 		LatAkhirAz: latAkhirAZ,
 		LonAkhirAz: lonAkhirAZ,
 		Ranges:     ranges,
+		VideoBlock: value14,
 	}
 	GenerateGeoJSON(genGeoJson)
 }
@@ -100,11 +101,16 @@ func GenerateGeoJSON(genGeoJson models.GenGeoJson) {
 	substringStart := 0
 	substringEnd := 0
 	resolusi := GetRes(int(genGeoJson.C240.I048.Res))
-	vidioBlock := GetVideoBlock(genGeoJson.C240) // 2
+	vidioBlock := genGeoJson.VideoBlock // 2
 	vidioBlockArr := strings.Split(vidioBlock, "")
 	geoJson := models.FeatureCollection{}
 
 	for i := 0; i < int(genGeoJson.C240.I049.NbCells); i++ {
+		substringEnd = substringEnd + resolusi
+		opac, _ := strconv.ParseInt(strings.ReplaceAll(strings.Join(vidioBlockArr[substringStart:substringEnd], " "), " ", ""), 16, 64)
+		opacs := (float64(opac) * 255) / 10000
+		substringStart = substringEnd
+
 		geoCoordinateStart := models.OwnUnit{
 			Lat: latAwalAZ1,
 			Lon: lonAwalAZ1,
@@ -113,6 +119,7 @@ func GenerateGeoJSON(genGeoJson models.GenGeoJson) {
 			Lat: latAkhirAZ1,
 			Lon: lonAkhirAZ1,
 		}
+
 		latStart, lonStart := geo1.At(geoCoordinateStart.Lat, geoCoordinateStart.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.StartAz)
 		latEndAz, lonEndAz := geo1.At(geoCoordinateEnd.Lat, geoCoordinateEnd.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.EndAz)
 
@@ -127,46 +134,40 @@ func GenerateGeoJSON(genGeoJson models.GenGeoJson) {
 		latAwalAZ1 = latStart
 		lonAkhirAZ1 = lonEndAz
 		latAkhirAZ1 = latEndAz
+		if opacs >= 0.9 {
+			geoJsonGeometry := models.Geometry{
+				Coordinates: polygonCell,
+				Type:        "Polygon",
+			}
 
-		geoJsonGeometry := models.Geometry{
-			Coordinates: polygonCell,
-			Type:        "Polygon",
-		}
+			geoJsonProperties := models.Properties{Opacity: opacs}
+			geoJsonFeature := models.Feature{
+				Type:       "Feature",
+				Geometry:   geoJsonGeometry,
+				Properties: geoJsonProperties,
+			}
 
-		substringEnd = substringEnd + resolusi
-		opac, _ := strconv.ParseInt(strings.ReplaceAll(strings.Join(vidioBlockArr[substringStart:substringEnd], " "), " ", ""), 16, 64)
-		opacs := (float64(opac) * 255) / 10000
-
-		geoJsonProperties := models.Properties{Opacity: opacs}
-		geoJsonFeature := models.Feature{
-			Type:       "Feature",
-			Geometry:   geoJsonGeometry,
-			Properties: geoJsonProperties,
-		}
-		substringStart = substringEnd
-		if opacs >= 0.5 {
 			geoJson.Features = append(geoJson.Features, &geoJsonFeature)
 		}
 
 	}
 	geoJson.Type = "FeatureCollection"
 	jsonData, _ := json.Marshal(geoJson)
-	// SendDataUdp("172.16.21.205:8888", jsonData)
 	SendWebSocketMessage(jsonData)
 }
 
 // Get Vidio Block
-func GetVideoBlock(c240 models.Cat240s) string {
-	var videoBlock string
-	if c240.I050.Video != "" {
-		videoBlock = c240.I050.Video
-	} else if c240.I051.Video != "" {
-		videoBlock = c240.I051.Video
-	} else if c240.I052.Video != "" {
-		videoBlock = c240.I052.Video
-	}
-	return videoBlock
-}
+// func GetVideoBlock(c240 models.Cat240s) string {
+// 	var videoBlock string
+// 	if c240.I050.Video != "" {
+// 		videoBlock = c240.I050.Video
+// 	} else if c240.I051.Video != "" {
+// 		videoBlock = c240.I051.Video
+// 	} else if c240.I052.Video != "" {
+// 		videoBlock = c240.I052.Video
+// 	}
+// 	return videoBlock
+// }
 
 // Get Vidio Resolution
 func GetRes(res int) int {
