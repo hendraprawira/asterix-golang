@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"encoding/binary"
 	"fmt"
+	"log"
 	"net"
-	"os"
-	"time"
+
+	socketio "github.com/googollee/go-socket.io"
+	"github.com/gorilla/websocket"
 
 	"golang.org/x/net/ipv4"
 )
@@ -27,17 +30,46 @@ func ConnectionUDP(port string) (conn *net.UDPConn) {
 	return conn
 }
 
-func ReadUDP(packetConn *ipv4.PacketConn, buffer []byte, host string) {
+func ReadUDP(packetConn *ipv4.PacketConn, buffer []byte, dataChan chan<- []byte) {
 	for {
-		start := time.Now().UTC()
 		n, _, _, _ := packetConn.ReadFrom(buffer)
-		data := buffer[:n]
-		if int(data[0:1][0]) == 240 && n > 500 {
-			AsterixGeoJSONParse(data)
-			processing := time.Since(start)
-			fmt.Fprintf(os.Stdout, "\033[0;31m Time taken: %s\033[0m\n ", processing)
+		data := make([]byte, n)
+		copy(data, buffer[:n])
+		dataChan <- data
+		// data := buffer[:n]
+		// dataChan <- data
+	}
+
+}
+
+func ProcessData(dataChan <-chan []byte, wsChan chan<- []byte) {
+	for data := range dataChan {
+		// start := time.Now().UTC()
+		if int(data[0:1][0]) == 240 && len(data) > 700 {
+			value6 := binary.BigEndian.Uint32(data[8:12])
+			fmt.Println(value6)
+			datas := AsterixGeoJSONParse(data)
+			// server.BroadcastToRoom("", "data", string("ssdsd"))
+
+			wsChan <- datas
+			// processing := time.Since(start)
+			// fmt.Fprintf(os.Stdout, "\033[0;31m Time taken: %s\033[0m\n ", processing)
 		}
 	}
+}
+
+func HandleWebSocket(ws *websocket.Conn, wsChan <-chan []byte) {
+	defer ws.Close()
+	for data := range wsChan {
+		err := ws.WriteMessage(websocket.TextMessage, data)
+		if err != nil {
+			log.Println("Error sending data over WebSocket:", err)
+			break
+		}
+	}
+}
+
+func HandleWebSockets(server *socketio.Server, wsChan <-chan []byte) {
 
 }
 

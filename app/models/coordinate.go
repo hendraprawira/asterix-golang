@@ -13,4 +13,5 @@ type GenGeoJson struct {
 	LonAkhirAz float64
 	Ranges     float64
 	VideoBlock string
+	MsgIndex   int64
 }

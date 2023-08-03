@@ -3,6 +3,7 @@ package models
 type FeatureCollection struct {
 	Type     string     `json:"type"`
 	Features []*Feature `json:"features"`
+	MsgIndex int64      `json:"index"`
 }
 
 // Feature represents a feature in the FeatureCollection
@@ -21,4 +22,5 @@ type Geometry struct {
 type Properties struct {
 	Opacity float64 `json:"opacity"`
 	Color   string  `json:"color"`
+	EndAz   float64 `json:"endAz"`
 }

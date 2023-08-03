@@ -8,13 +8,11 @@ import (
 	"math"
 	"strconv"
 	"strings"
-
-	"github.com/StefanSchroeder/Golang-Ellipsoid/ellipsoid"
 )
 
-func AsterixGeoJSONParse(data []byte) {
+func AsterixGeoJSONParse(data []byte) (datas []byte) {
 
-	geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
+	// geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
 
 	//dummy lat lon from ownunit/ship
 	geoCrdRefStartAZ := models.OwnUnit{
@@ -35,14 +33,16 @@ func AsterixGeoJSONParse(data []byte) {
 	value8 := binary.BigEndian.Uint16(data[14:16])
 	endAz := (float64(value8) / math.Pow(2, 16)) * float64(360)
 
-	var cellStartAZ float64 = (float64(cellDur) * math.Pow(10, -15)) * float64(startRG+1-1) * (299792458 / 2)  //  range awal cell dari own unit terhadap start azimuth
-	var cellEndAZ float64 = (float64(cellDur) * math.Pow(10, -15)) * float64(startRG+1-1) * (299792458 / 2)    //  range awal cell dari own unit terhadap end azimuth
-	var ranges float64 = (float64(cellDur)*math.Pow(10, -15))*float64(startRG+2-1)*(299792458/2) - cellStartAZ // 9.765624948527275
+	var cellStartAZ float64 = (float64(cellDur) * math.Pow(10, -15)) * float64(startRG+1-1) * (299792458 / 2)           //  range awal cell dari own unit terhadap start azimuth
+	var cellEndAZ float64 = (float64(cellDur) * math.Pow(10, -15)) * float64(startRG+1-1) * (299792458 / 2)             //  range awal cell dari own unit terhadap end azimuth
+	var ranges float64 = ((float64(cellDur)*math.Pow(10, -15))*float64(startRG+2-1)*(299792458/2) - cellStartAZ) / 1000 // 9.765624948527275
 
-	latAwalAZ, lonAwalAZ := geo1.At(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, cellStartAZ, startAz)
-	latAkhirAZ, lonAkhirAZ := geo1.At(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, cellEndAZ, endAz)
+	// latAwalAZ, lonAwalAZ := geo1.At(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, cellStartAZ, startAz)
+	// latAkhirAZ, lonAkhirAZ := geo1.At(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, cellEndAZ, endAz)
 
-	// len240 := binary.BigEndian.Uint16(data[1:3])
+	latAwalAZ, lonAwalAZ := CalculateNewCoordinates(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, startAz, cellStartAZ)
+	latAkhirAZ, lonAkhirAZ := CalculateNewCoordinates(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, endAz, cellEndAZ)
+
 	res := data[25:26]
 	calc := int(res[0]) - 1
 	calca := math.Pow(2, float64(calc))
@@ -71,14 +71,8 @@ func AsterixGeoJSONParse(data []byte) {
 			NbCells: value13,
 		},
 	}
-
-	// if len240 <= 1020 {
-	// 	dataStruct.I050.Video = value14
-	// } else if len240 > 1020 && len240 <= 16320 {
-	// 	dataStruct.I051.Video = value14
-	// } else if len240 > 16320 && len240 <= 65024 {
-	// 	dataStruct.I052.Video = value14
-	// }
+	value6 := binary.BigEndian.Uint32(data[8:12])
+	// fmt.Println(value6)
 
 	genGeoJson := models.GenGeoJson{
 		C240:       dataStruct,
@@ -88,12 +82,15 @@ func AsterixGeoJSONParse(data []byte) {
 		LonAkhirAz: lonAkhirAZ,
 		Ranges:     ranges,
 		VideoBlock: value14,
+		MsgIndex:   int64(value6),
 	}
-	GenerateGeoJSON(genGeoJson)
+	datas = GenerateGeoJSON(genGeoJson)
+	return datas
+
 }
 
-func GenerateGeoJSON(genGeoJson models.GenGeoJson) {
-	geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
+func GenerateGeoJSON(genGeoJson models.GenGeoJson) (data []byte) {
+	// geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
 	latAwalAZ1 := genGeoJson.LatAwalAz   // -6.9496124915037
 	lonAwalAZ1 := genGeoJson.LonAwalAz   // 107.61957049369812
 	latAkhirAZ1 := genGeoJson.LatAkhirAz // -6.9496124915037
@@ -120,27 +117,27 @@ func GenerateGeoJSON(genGeoJson models.GenGeoJson) {
 			Lon: lonAkhirAZ1,
 		}
 
-		latStart, lonStart := geo1.At(geoCoordinateStart.Lat, geoCoordinateStart.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.StartAz)
-		latEndAz, lonEndAz := geo1.At(geoCoordinateEnd.Lat, geoCoordinateEnd.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.EndAz)
+		// latStart, lonStart := geo1.At(geoCoordinateStart.Lat, geoCoordinateStart.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.StartAz)
+		// latEndAz, lonEndAz := geo1.At(geoCoordinateEnd.Lat, geoCoordinateEnd.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.EndAz)
 
-		cellPoint1 := []float64{lonAwalAZ1, latAwalAZ1}
-		cellPoint2 := []float64{lonStart, latStart}
-		cellPoint3 := []float64{lonEndAz, latEndAz}
-		cellPoint4 := []float64{lonAkhirAZ1, latAkhirAZ1}
+		latStart, lonStart := CalculateNewCoordinates(geoCoordinateStart.Lat, geoCoordinateStart.Lon, genGeoJson.C240.I041.StartAz, genGeoJson.Ranges)
+		latEndAz, lonEndAz := CalculateNewCoordinates(geoCoordinateEnd.Lat, geoCoordinateEnd.Lon, genGeoJson.C240.I041.EndAz, genGeoJson.Ranges)
 
-		polygonCell := [][][]float64{{cellPoint1, cellPoint2, cellPoint3, cellPoint4}}
-
-		lonAwalAZ1 = lonStart
-		latAwalAZ1 = latStart
-		lonAkhirAZ1 = lonEndAz
-		latAkhirAZ1 = latEndAz
 		if opacs >= 0.9 {
+			cellPoint1 := []float64{lonAwalAZ1, latAwalAZ1}
+			cellPoint2 := []float64{lonStart, latStart}
+			cellPoint3 := []float64{lonEndAz, latEndAz}
+			cellPoint4 := []float64{lonAkhirAZ1, latAkhirAZ1}
+
+			polygonCell := [][][]float64{{cellPoint1, cellPoint2, cellPoint3, cellPoint4}}
 			geoJsonGeometry := models.Geometry{
 				Coordinates: polygonCell,
 				Type:        "Polygon",
 			}
 
-			geoJsonProperties := models.Properties{Opacity: opacs}
+			geoJsonProperties := models.Properties{Opacity: opacs,
+				EndAz: genGeoJson.C240.I041.EndAz,
+			}
 			geoJsonFeature := models.Feature{
 				Type:       "Feature",
 				Geometry:   geoJsonGeometry,
@@ -149,25 +146,24 @@ func GenerateGeoJSON(genGeoJson models.GenGeoJson) {
 
 			geoJson.Features = append(geoJson.Features, &geoJsonFeature)
 		}
+		lonAwalAZ1 = lonStart
+		latAwalAZ1 = latStart
+		lonAkhirAZ1 = lonEndAz
+		latAkhirAZ1 = latEndAz
 
 	}
-	geoJson.Type = "FeatureCollection"
-	jsonData, _ := json.Marshal(geoJson)
-	SendWebSocketMessage(jsonData)
+	if len(geoJson.Features) > 0 {
+		geoJson.Type = "FeatureCollection"
+		geoJson.MsgIndex = genGeoJson.MsgIndex
+		jsonData, _ := json.Marshal(geoJson)
+		return jsonData
+		// SendWebSocketMessage(jsonData)
+	}
+	return
+	// geoJson.Type = "FeatureCollection"
+	// jsonData, _ := json.Marshal(geoJson)
+	// SendWebSocketMessage(jsonData)
 }
-
-// Get Vidio Block
-// func GetVideoBlock(c240 models.Cat240s) string {
-// 	var videoBlock string
-// 	if c240.I050.Video != "" {
-// 		videoBlock = c240.I050.Video
-// 	} else if c240.I051.Video != "" {
-// 		videoBlock = c240.I051.Video
-// 	} else if c240.I052.Video != "" {
-// 		videoBlock = c240.I052.Video
-// 	}
-// 	return videoBlock
-// }
 
 // Get Vidio Resolution
 func GetRes(res int) int {
