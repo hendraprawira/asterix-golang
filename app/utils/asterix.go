@@ -5,14 +5,17 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/StefanSchroeder/Golang-Ellipsoid/ellipsoid"
 )
 
 func AsterixGeoJSONParse(data []byte) (datas []byte) {
 
-	// geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
+	geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
 
 	//dummy lat lon from ownunit/ship
 	geoCrdRefStartAZ := models.OwnUnit{
@@ -37,11 +40,11 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	var cellEndAZ float64 = (float64(cellDur) * math.Pow(10, -15)) * float64(startRG+1-1) * (299792458 / 2)             //  range awal cell dari own unit terhadap end azimuth
 	var ranges float64 = ((float64(cellDur)*math.Pow(10, -15))*float64(startRG+2-1)*(299792458/2) - cellStartAZ) / 1000 // 9.765624948527275
 
-	// latAwalAZ, lonAwalAZ := geo1.At(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, cellStartAZ, startAz)
-	// latAkhirAZ, lonAkhirAZ := geo1.At(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, cellEndAZ, endAz)
+	latAwalAZ, lonAwalAZ := geo1.At(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, cellStartAZ, startAz)
+	latAkhirAZ, lonAkhirAZ := geo1.At(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, cellEndAZ, endAz)
 
-	latAwalAZ, lonAwalAZ := CalculateNewCoordinates(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, startAz, cellStartAZ)
-	latAkhirAZ, lonAkhirAZ := CalculateNewCoordinates(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, endAz, cellEndAZ)
+	// latAwalAZ, lonAwalAZ := CalculateNewCoordinates(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, startAz, cellStartAZ)
+	// latAkhirAZ, lonAkhirAZ := CalculateNewCoordinates(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, endAz, cellEndAZ)
 
 	res := data[25:26]
 	calc := int(res[0]) - 1
@@ -90,7 +93,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 }
 
 func GenerateGeoJSON(genGeoJson models.GenGeoJson) (data []byte) {
-	// geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
+	geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
 	latAwalAZ1 := genGeoJson.LatAwalAz   // -6.9496124915037
 	lonAwalAZ1 := genGeoJson.LonAwalAz   // 107.61957049369812
 	latAkhirAZ1 := genGeoJson.LatAkhirAz // -6.9496124915037
@@ -117,13 +120,15 @@ func GenerateGeoJSON(genGeoJson models.GenGeoJson) (data []byte) {
 			Lon: lonAkhirAZ1,
 		}
 
-		// latStart, lonStart := geo1.At(geoCoordinateStart.Lat, geoCoordinateStart.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.StartAz)
-		// latEndAz, lonEndAz := geo1.At(geoCoordinateEnd.Lat, geoCoordinateEnd.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.EndAz)
+		latStart, lonStart := geo1.At(geoCoordinateStart.Lat, geoCoordinateStart.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.StartAz)
+		latEndAz, lonEndAz := geo1.At(geoCoordinateEnd.Lat, geoCoordinateEnd.Lon, genGeoJson.Ranges, genGeoJson.C240.I041.EndAz)
 
-		latStart, lonStart := CalculateNewCoordinates(geoCoordinateStart.Lat, geoCoordinateStart.Lon, genGeoJson.C240.I041.StartAz, genGeoJson.Ranges)
-		latEndAz, lonEndAz := CalculateNewCoordinates(geoCoordinateEnd.Lat, geoCoordinateEnd.Lon, genGeoJson.C240.I041.EndAz, genGeoJson.Ranges)
+		// latStart, lonStart := CalculateNewCoordinates(geoCoordinateStart.Lat, geoCoordinateStart.Lon, genGeoJson.C240.I041.StartAz, genGeoJson.Ranges)
+		// latEndAz, lonEndAz := CalculateNewCoordinates(geoCoordinateEnd.Lat, geoCoordinateEnd.Lon, genGeoJson.C240.I041.EndAz, genGeoJson.Ranges)
 
-		if opacs >= 0.9 {
+		log.Print(latStart, lonStart)
+
+		if opacs >= 0.8 {
 			cellPoint1 := []float64{lonAwalAZ1, latAwalAZ1}
 			cellPoint2 := []float64{lonStart, latStart}
 			cellPoint3 := []float64{lonEndAz, latEndAz}
