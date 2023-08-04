@@ -73,7 +73,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	substringEnd := resolusi
 	cell := 0
 	geoJson := models.FeatureCollection{}
-
+	geoJson.EndAz = C240.I041.EndAz
 	for i := 0; i < (len(vidioBlockArr) / resolusi); i++ {
 		opac, _ := strconv.ParseInt(strings.ReplaceAll(strings.Join(vidioBlockArr[substringStart:substringEnd], " "), " ", ""), 16, 64)
 		opacs := (float64(opac) * 255) / 100 / 100
@@ -138,7 +138,6 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 
 	}
 	geoJson.Type = "FeatureCollection"
-	geoJson.EndAz = C240.I041.EndAz
 	jsonData, _ := json.Marshal(geoJson)
 	return jsonData
 }
