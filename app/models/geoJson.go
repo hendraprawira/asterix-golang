@@ -4,6 +4,7 @@ type FeatureCollection struct {
 	Type     string     `json:"type"`
 	Features []*Feature `json:"features"`
 	EndAz    float64    `json:"endAzi"`
+	StartAz  float64    `json:"startAzi"`
 }
 
 // Feature represents a feature in the FeatureCollection
