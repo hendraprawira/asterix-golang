@@ -3,7 +3,7 @@ package models
 type FeatureCollection struct {
 	Type     string     `json:"type"`
 	Features []*Feature `json:"features"`
-	MsgIndex int64      `json:"index"`
+	EndAz    float64    `json:"endAzi"`
 }
 
 // Feature represents a feature in the FeatureCollection

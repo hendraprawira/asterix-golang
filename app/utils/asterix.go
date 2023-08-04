@@ -138,6 +138,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 
 	}
 	geoJson.Type = "FeatureCollection"
+	geoJson.EndAz = C240.I041.EndAz
 	jsonData, _ := json.Marshal(geoJson)
 	return jsonData
 }
