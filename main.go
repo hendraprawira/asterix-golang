@@ -19,7 +19,7 @@ func main() {
 	}
 
 	portUdp := os.Getenv("UDP_PORT")
-	// port := ":" + os.Getenv("ACTIVE_PORT")
+	port := ":" + os.Getenv("ACTIVE_PORT")
 
 	conn := utils.ConnectionUDP(portUdp)
 	packetConn := ipv4.NewPacketConn(conn)
@@ -28,50 +28,9 @@ func main() {
 
 	dataChan := make(chan []byte)
 	wsChan := make(chan []byte)
+
 	go utils.ReadUDP(packetConn, buffer, dataChan)
 	go utils.ProcessData(dataChan, wsChan)
-
-	// Create a new socket.io server
-	// server := socketio.NewServer(nil)
-
-	// server.OnConnect("/", func(s socketio.Conn) error {
-	// 	s.SetContext("")
-	// 	fmt.Println("connected:", s.ID())
-	// 	return nil
-	// })
-
-	// server.OnEvent("/", "notice", func(s socketio.Conn, msg string) {
-	// 	fmt.Println("notice:", msg)
-	// 	s.Emit("reply", "have "+msg)
-	// })
-
-	// server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
-	// 	s.SetContext(msg)
-	// 	return "recv " + msg
-	// })
-
-	// server.OnEvent("/", "bye", func(s socketio.Conn) string {
-	// 	last := s.Context().(string)
-	// 	s.Emit("bye", last)
-	// 	s.Close()
-	// 	return last
-	// })
-
-	// server.OnError("/", func(s socketio.Conn, e error) {
-	// 	fmt.Println("meet error:", e)
-	// })
-
-	// server.OnDisconnect("/", func(s socketio.Conn, reason string) {
-	// 	fmt.Println("closed", reason)
-	// })
-
-	// go server.Serve()
-	// defer server.Close()
-
-	// http.Handle("/socket.io/", server)
-	// http.Handle("/", http.FileServer(http.Dir("./asset")))
-	// log.Println("Serving at localhost:8000...")
-	// log.Fatal(http.ListenAndServe(":8080", nil))
 
 	http.HandleFunc("/geosocket", func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{
@@ -86,15 +45,10 @@ func main() {
 	})
 
 	// Start the WebSocket server
-	errs := http.ListenAndServe(":8080", nil)
+	errs := http.ListenAndServe(port, nil)
 	if errs != nil {
 		log.Fatal("Error starting WebSocket server:", errs)
 	}
-	// // if err := router.Routes().Run(port); err != nil {
-	// // 	log.Fatalln(err)
-	// // }
-
-	// go utils.HandleWebSockets(server, wsChan)
 
 	select {}
 }

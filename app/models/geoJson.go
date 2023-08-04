@@ -23,4 +23,5 @@ type Properties struct {
 	Opacity float64 `json:"opacity"`
 	Color   string  `json:"color"`
 	EndAz   float64 `json:"endAz"`
+	Radius  float64 `json:"radius"`
 }
