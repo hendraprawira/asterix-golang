@@ -40,18 +40,18 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	getLatCrdRefEndAZ, getLonCrdRefEndAZ := geo1.At(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, distanceCellStart, endAz)
 
 	res := data[25:26]
-	calc := int(res[0]) - 1
-	calca := math.Pow(2, float64(calc))
+	resBit := int(res[0]) - 1
+	resBits := math.Pow(2, float64(resBit))
 
-	value12 := binary.BigEndian.Uint16(data[26:28])
-	hexString1 := hex.EncodeToString(data[28:31])
-	value13, _ := strconv.ParseInt(strings.ReplaceAll(hexString1, " ", ""), 16, 64)
-	value13a := ((int64(value13) * int64(calca)) / int64(res[0])) / 2
+	nbvb := binary.BigEndian.Uint16(data[26:28])
+	hexStringVideo := hex.EncodeToString(data[28:31])
+	videoBlock, _ := strconv.ParseInt(strings.ReplaceAll(hexStringVideo, " ", ""), 16, 64)
+	videoBlockLen := ((int64(videoBlock) * int64(resBits)) / int64(res[0])) / 2
 
-	hexString := hex.EncodeToString(data[32 : value13a+32])
+	hexString := hex.EncodeToString(data[32 : videoBlockLen+32])
 	result := strings.Split(hexString, "")
 	value14 := strings.ToUpper((strings.ReplaceAll(strings.Join(result, " "), " ", "")))
-	vidioBlockArr := strings.Split(value14, "")
+	videoBlockArr := strings.Split(value14, "")
 
 	C240 := models.Cat240s{
 		I041: models.I041{
@@ -64,8 +64,8 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 			Res: uint32(res[0]),
 		},
 		I049: models.I049{
-			Nbvb:    value12,
-			NbCells: value13,
+			Nbvb:    nbvb,
+			NbCells: videoBlock,
 		},
 	}
 	resolusi := GetRes(int(C240.I048.Res))
@@ -76,8 +76,8 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	geoJson.EndAz = C240.I041.EndAz
 	geoJson.StartAz = C240.I041.StartAz
 
-	for i := 0; i < (len(vidioBlockArr) / resolusi); i++ {
-		opac, _ := strconv.ParseInt(strings.ReplaceAll(strings.Join(vidioBlockArr[substringStart:substringEnd], " "), " ", ""), 16, 64)
+	for i := 0; i < (len(videoBlockArr) / resolusi); i++ {
+		opac, _ := strconv.ParseInt(strings.ReplaceAll(strings.Join(videoBlockArr[substringStart:substringEnd], " "), " ", ""), 16, 64)
 		opacs := (float64(opac) * 255) / 100 / 100
 
 		if opacs > 0.8 {
@@ -92,9 +92,9 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 				Lon: getLonCrdRefEndAZ,
 			}
 
-			var StartCell float64 = (float64(C240.I041.CellDur)) * (math.Pow(10, -15)) * float64(i+1-1) * (299792458 / 2) //    Distance Meter from ownUnit
-			latPoint1, lonPoint1 := geo1.At(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, StartCell, startAz)
-			latPoint4, lonPoint4 := geo1.At(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, StartCell, endAz)
+			var startCell float64 = (float64(C240.I041.CellDur)) * (math.Pow(10, -15)) * float64(i+1-1) * (299792458 / 2) //    Distance Meter from ownUnit
+			latPoint1, lonPoint1 := geo1.At(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, startCell, startAz)
+			latPoint4, lonPoint4 := geo1.At(geoCrdRefEndtAZ.Lat, geoCrdRefEndtAZ.Lon, startCell, endAz)
 
 			nextPointStartAZ := models.OwnUnit{
 				Lat: latPoint1,
