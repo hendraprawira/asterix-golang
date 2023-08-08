@@ -18,13 +18,13 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
 
 	geoCrdRefStartAZ := models.OwnUnit{
-		Lat: 47.2848,
-		Lon: -122.44537,
+		Lat: 47.39885782790412,
+		Lon: -122.45102114364046,
 	}
 
 	geoCrdRefEndtAZ := models.OwnUnit{
-		Lat: 47.2848,
-		Lon: -122.44537,
+		Lat: 47.39885782790412,
+		Lon: -122.45102114364046,
 	}
 	cellDur := binary.BigEndian.Uint32(data[20:24])
 	startRG := binary.BigEndian.Uint32(data[16:20])
