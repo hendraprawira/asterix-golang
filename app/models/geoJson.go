@@ -5,6 +5,7 @@ type FeatureCollection struct {
 	Features []*Feature `json:"features"`
 	EndAz    float64    `json:"endAzi"`
 	StartAz  float64    `json:"startAzi"`
+	Radius   float64    `json:"radius"`
 }
 
 // Feature represents a feature in the FeatureCollection
@@ -24,5 +25,5 @@ type Properties struct {
 	Opacity float64 `json:"opacity"`
 	Color   string  `json:"color"`
 	EndAz   float64 `json:"endAz"`
-	Radius  float64 `json:"radius"`
+	// Radius  float64 `json:"radius"`
 }

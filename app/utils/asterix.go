@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"math"
 	"os"
 	"strconv"
@@ -18,6 +19,11 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
 
 	//dummy lat lon from ownunit/ship
+	ownUnitStartAz := models.OwnUnit{
+		Lat: 47.2848,
+		Lon: -122.44537,
+	}
+
 	geoCrdRefStartAZ := models.OwnUnit{
 		Lat: 47.2848,
 		Lon: -122.44537,
@@ -76,6 +82,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	geoJson := models.FeatureCollection{}
 	geoJson.EndAz = C240.I041.EndAz
 	geoJson.StartAz = C240.I041.StartAz
+	radiusCheck := 0.0
 
 	for i := 0; i < (len(videoBlockArr) / resolusi); i++ {
 		opac, _ := strconv.ParseInt(strings.ReplaceAll(strings.Join(videoBlockArr[substringStart:substringEnd], " "), " ", ""), 16, 64)
@@ -117,7 +124,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 
 			polygonCell := [][][]float64{{cellPoint1, cellPoint2, cellPoint3, cellPoint4}}
 
-			radius := calculateRange(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, latPoint2, lonPoint2)
+			radius := calculateRange(ownUnitStartAz.Lat, ownUnitStartAz.Lon, latPoint2, lonPoint2)
 
 			geoJsonGeometry := models.Geometry{
 				Coordinates: polygonCell,
@@ -125,8 +132,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 			}
 
 			geoJsonProperties := models.Properties{Opacity: opacs,
-				EndAz:  C240.I041.EndAz,
-				Radius: radius,
+				EndAz: C240.I041.EndAz,
 			}
 			geoJsonFeature := models.Feature{
 				Type:       "Feature",
@@ -135,6 +141,9 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 			}
 
 			geoJson.Features = append(geoJson.Features, &geoJsonFeature)
+			if radiusCheck < radius {
+				radiusCheck = radius
+			}
 
 		}
 		substringStart = substringEnd
@@ -142,6 +151,8 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 		cell = cell + 1
 
 	}
+	geoJson.Radius = radiusCheck
+	log.Print(geoJson.Radius)
 	geoJson.Type = "FeatureCollection"
 	jsonData, _ := json.Marshal(geoJson)
 	return jsonData
@@ -163,7 +174,7 @@ func GetRes(res int) int {
 
 func calculateRange(radarLat, radarLon, targetLat, targetLon float64) float64 {
 	// Convert latitude and longitude from degrees to radians
-	const earthRadiusKm = 6371.0 * 1000
+	const earthRadiusKm = 6371000
 	lat1Rad := radarLat * math.Pi / 180
 	lon1Rad := radarLon * math.Pi / 180
 	lat2Rad := targetLat * math.Pi / 180
