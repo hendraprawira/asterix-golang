@@ -19,13 +19,13 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 
 	//dummy lat lon from ownunit/ship
 	geoCrdRefStartAZ := models.OwnUnit{
-		Lat: -6.949612491503703,
-		Lon: 107.61957049369812,
+		Lat: 47.2848,
+		Lon: -122.44537,
 	}
 
 	geoCrdRefEndtAZ := models.OwnUnit{
-		Lat: -6.949612491503703,
-		Lon: 107.61957049369812,
+		Lat: -122.44537,
+		Lon: -122.44537,
 	}
 	cellDur := binary.BigEndian.Uint32(data[20:24])
 	startRG := binary.BigEndian.Uint32(data[16:20])
