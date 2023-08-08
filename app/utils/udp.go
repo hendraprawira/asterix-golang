@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
-	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -39,14 +37,9 @@ func ReadUDP(packetConn *ipv4.PacketConn, buffer []byte, dataChan chan<- []byte)
 
 func ProcessData(dataChan <-chan []byte, wsChan chan<- []byte) {
 	for data := range dataChan {
-		start := time.Now().UTC()
 		if int(data[0:1][0]) == 240 && len(data) > 400 {
-			// value6 := binary.BigEndian.Uint32(data[8:12])
-			// fmt.Println(value6)
 			datas := AsterixGeoJSONParse(data)
 			wsChan <- datas
-			processing := time.Since(start)
-			fmt.Fprintf(os.Stdout, "\033[0;31m Time taken: %s\033[0m\n ", processing)
 		}
 	}
 }

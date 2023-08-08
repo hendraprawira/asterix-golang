@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"math"
+	"os"
 	"strconv"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 )
 
 func AsterixGeoJSONParse(data []byte) (datas []byte) {
-
+	opacity, _ := strconv.ParseFloat(os.Getenv("OPACITY"), 32)
 	geo1 := ellipsoid.Init("WGS84", ellipsoid.Degrees, ellipsoid.Meter, ellipsoid.LongitudeIsSymmetric, ellipsoid.BearingIsSymmetric)
 
 	//dummy lat lon from ownunit/ship
@@ -80,7 +81,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 		opac, _ := strconv.ParseInt(strings.ReplaceAll(strings.Join(videoBlockArr[substringStart:substringEnd], " "), " ", ""), 16, 64)
 		opacs := (float64(opac) * 255) / 100 / 100
 
-		if opacs > 0.8 {
+		if opacs > opacity {
 
 			geoCrdRefStartAZ := models.OwnUnit{
 				Lat: getLatCrdRefStartAZ,
@@ -116,6 +117,8 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 
 			polygonCell := [][][]float64{{cellPoint1, cellPoint2, cellPoint3, cellPoint4}}
 
+			radius := calculateRange(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, latPoint2, lonPoint2)
+
 			geoJsonGeometry := models.Geometry{
 				Coordinates: polygonCell,
 				Type:        "Polygon",
@@ -123,7 +126,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 
 			geoJsonProperties := models.Properties{Opacity: opacs,
 				EndAz:  C240.I041.EndAz,
-				Radius: 20000.0,
+				Radius: radius,
 			}
 			geoJsonFeature := models.Feature{
 				Type:       "Feature",
@@ -156,4 +159,24 @@ func GetRes(res int) int {
 		resolusi = 8
 	}
 	return resolusi
+}
+
+func calculateRange(radarLat, radarLon, targetLat, targetLon float64) float64 {
+	// Convert latitude and longitude from degrees to radians
+	const earthRadiusKm = 6371.0 * 1000
+	lat1Rad := radarLat * math.Pi / 180
+	lon1Rad := radarLon * math.Pi / 180
+	lat2Rad := targetLat * math.Pi / 180
+	lon2Rad := targetLon * math.Pi / 180
+
+	// Haversine formula
+	dLat := lat2Rad - lat1Rad
+	dLon := lon2Rad - lon1Rad
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) + math.Cos(lat1Rad)*math.Cos(lat2Rad)*math.Sin(dLon/2)*math.Sin(dLon/2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+
+	// Calculate the range in kilometers
+	rangeKm := earthRadiusKm * c
+
+	return rangeKm
 }
