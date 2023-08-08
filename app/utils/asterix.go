@@ -30,7 +30,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	}
 
 	geoCrdRefEndtAZ := models.OwnUnit{
-		Lat: -122.44537,
+		Lat: 47.2848,
 		Lon: -122.44537,
 	}
 	cellDur := binary.BigEndian.Uint32(data[20:24])
