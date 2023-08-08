@@ -29,3 +29,22 @@ and
 ```bash
 docker-compose up
 ```
+
+how to run with hot reload
+in cmd/command prompt run syntax
+```bash
+go install github.com/cosmtrek/air@latest
+```
+then
+```bash
+air -c .air.toml
+```
+last
+```bash
+air
+```
+
+run golang with hot reload just 
+```bash
+air
+```
