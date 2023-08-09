@@ -84,7 +84,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 
 	for i := 0; i < (len(videoBlockArr) / resolusi); i++ {
 		opac, _ := strconv.ParseInt(strings.ReplaceAll(strings.Join(videoBlockArr[substringStart:substringEnd], " "), " ", ""), 16, 64)
-		opacs := (float64(opac) * 255) / 100 / 100
+		opacs := (float64(opac) / math.Pow(2, float64(resolusi)))
 
 		if opacs > opacity {
 
