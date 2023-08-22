@@ -29,12 +29,12 @@
             "properties": {
                 "opacity": 0.4335,
                 "color": "",
-                "endAz": 304.1015625,
-                "radius": 20000
+                "endAz": 304.1015625
             }
         }
     ],
     "endAzi": 304.1015625,
-    "startAzi": 303.9312744140625
+    "startAzi": 303.9312744140625,
+    "radius": 20000
     
 }
