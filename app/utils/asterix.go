@@ -73,6 +73,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	substringEnd := resolusi
 	cell := 0
 	geoJson := models.FeatureCollection{}
+	geoJson.MsgIndex = binary.BigEndian.Uint32(data[8:12])
 	geoJson.EndAz = C240.I041.EndAz
 	geoJson.StartAz = C240.I041.StartAz
 
@@ -80,7 +81,7 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	// radius2 := distanceCellStart + (ranges1 * float64(C240.I049.NbCells))
 
 	// var ranges1 float64 = (float64(C240.I041.CellDur)) * (math.Pow(10, -15)) * float64(0+2-1) * (299792458 / 2) //    Distance Meter from ownUnit
-	radius2 := 20000.0
+	radius2 := 30000.0
 
 	for i := 0; i < (len(videoBlockArr) / resolusi); i++ {
 		opac, _ := strconv.ParseInt(strings.ReplaceAll(strings.Join(videoBlockArr[substringStart:substringEnd], " "), " ", ""), 16, 64)
