@@ -28,12 +28,8 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	}
 	cellDur := binary.BigEndian.Uint32(data[20:24])
 	startRG := binary.BigEndian.Uint32(data[16:20])
-
-	value7 := binary.BigEndian.Uint16(data[12:14])
-	startAz := (float64(value7) / math.Pow(2, 16)) * float64(360)
-
-	value8 := binary.BigEndian.Uint16(data[14:16])
-	endAz := (float64(value8) / math.Pow(2, 16)) * float64(360)
+	startAz := (float64(binary.BigEndian.Uint16(data[12:14])) / math.Pow(2, 16)) * float64(360)
+	endAz := (float64(binary.BigEndian.Uint16(data[14:16])) / math.Pow(2, 16)) * float64(360)
 
 	var distanceCellStart float64 = ((float64(cellDur) * math.Pow(10, -15)) * float64(startRG+1-1) * (299792458 / 2)) // 9.765624948527275
 	getLatCrdRefStartAZ, getLonCrdRefStartAZ := geo1.At(geoCrdRefStartAZ.Lat, geoCrdRefStartAZ.Lon, distanceCellStart, startAz)
@@ -77,10 +73,6 @@ func AsterixGeoJSONParse(data []byte) (datas []byte) {
 	geoJson.EndAz = C240.I041.EndAz
 	geoJson.StartAz = C240.I041.StartAz
 
-	// var ranges1 float64 = (float64(C240.I041.CellDur)) * (math.Pow(10, -15)) * float64(0+2-1) * (299792458 / 2) //    Distance Meter from ownUnit
-	// radius2 := distanceCellStart + (ranges1 * float64(C240.I049.NbCells))
-
-	// var ranges1 float64 = (float64(C240.I041.CellDur)) * (math.Pow(10, -15)) * float64(0+2-1) * (299792458 / 2) //    Distance Meter from ownUnit
 	radius2 := 30000.0
 
 	for i := 0; i < (len(videoBlockArr) / resolusi); i++ {
