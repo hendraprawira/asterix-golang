@@ -2,7 +2,7 @@ package models
 
 type FeatureCollection struct {
 	Type     string     `json:"type"`
-	MsgIndex uint32			`json:"msgIndex"`
+	MsgIndex uint32     `json:"msgIndex"`
 	EndAz    float64    `json:"endAzi"`
 	StartAz  float64    `json:"startAzi"`
 	Features []*Feature `json:"features"`
@@ -26,5 +26,4 @@ type Properties struct {
 	Opacity float64 `json:"opacity"`
 	Color   string  `json:"color"`
 	EndAz   float64 `json:"endAz"`
-	// Radius  float64 `json:"radius"`
 }

@@ -35,7 +35,7 @@ func ReadUDP(packetConn *ipv4.PacketConn, buffer []byte, dataChan chan<- []byte)
 
 func ProcessData(dataChan <-chan []byte, wsChan chan<- []byte) {
 	for data := range dataChan {
-		if int(data[0:1][0]) == 240 && int(data[11:12][0]) == 2  {
+		if int(data[0:1][0]) == 240 && int(data[7:8][0]) == 2 {
 			datas := AsterixGeoJSONParse(data)
 			wsChan <- datas
 		}
